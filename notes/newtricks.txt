@@ -1,0 +1,5 @@
+
+in c, there are format specifiers for size_t and ssize_t
+they are %zu and %zd, respectively
+
+big endian is the format i already know, little endian is the one that fucks me up

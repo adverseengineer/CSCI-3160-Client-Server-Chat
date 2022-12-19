@@ -1,3 +1,6 @@
+//Nick Sells, 2022
+//CSCI 3160 Final Project
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -10,8 +13,8 @@
 #include <sys/types.h>
 #include <signal.h>
 
-#include "common.h"
-#include "config.h"
+#include "common/common.h"
+#include "common/config.h"
 
 static _Atomic unsigned int numclients = 0;
 static int uid = 10;
@@ -19,22 +22,6 @@ static int uid = 10;
 client_t* clients[MAX_CLIENTS];
 
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void str_overwrite_stdout(void) {
-	printf("\r%s", "> ");
-	fflush(stdout);
-}
-
-void print_client_addr(struct sockaddr_in* addr){
-	printf(
-		"%d.%d.%d.%d:%d",
-		addr->sin_addr.s_addr & 0xff,
-		(addr->sin_addr.s_addr & 0xff00) >> 8,
-		(addr->sin_addr.s_addr & 0xff0000) >> 16,
-		(addr->sin_addr.s_addr & 0xff000000) >> 24,
-		addr->sin_port
-	);
-}
 
 //adds a client
 void queue_add(client_t* cl) {
@@ -91,57 +78,53 @@ void send_message(char* msg, int uid) {
 //get a name from the user then start an endless loop of sending and receiving
 void* handle_client(void* arg) {
 
-	char buff_out[BUFFER_MAX_CHARS];
+	char msg_buffer[BUFFER_MAX_CHARS];
 	char name[CLIENT_NAME_MAX_CHARS];
-	int leave_flag = 0;
+	int shouldexit = 0;
 
 	numclients++;
 	client_t* cli = arg;
 
 	ssize_t numbytes = recv(cli->sockfd, name, CLIENT_NAME_MAX_CHARS, 0);
 	size_t namelen = strlen(name);
-	//NOTE: the greater than 2 restriction here is cold code, the greater than 2 chars is enforced client-side
+	//NOTE: the greater than 2 restriction here is cold code, greater than 2 chars is enforced client-side
 	if((numbytes <= 0) || (namelen < 2) || ((namelen + 1) >= CLIENT_NAME_MAX_CHARS)){
 		printf("Didn't enter the name.\n");
-		leave_flag = 1;
+		shouldexit = 1;
 	}
 	else {
 		strncpy(cli->name, name, CLIENT_NAME_MAX_CHARS);
-		snprintf(buff_out, BUFFER_MAX_CHARS, "%s has joined\n", cli->name);
-		printf("%s", buff_out);
-		send_message(buff_out, cli->uid);
+		snprintf(msg_buffer, BUFFER_MAX_CHARS, "%s has joined\n", cli->name);
+		printf("%s", msg_buffer);
+		send_message(msg_buffer, cli->uid);
 	}
 
-	memset(buff_out, '\0', BUFFER_MAX_CHARS);
+	memset(msg_buffer, '\0', BUFFER_MAX_CHARS);
 
-	while(1) {
-		
-		if(leave_flag) {
-			break;
-		}
+	while(!shouldexit) {
 
-		ssize_t numbytes = recv(cli->sockfd, buff_out, BUFFER_MAX_CHARS, 0);
+		ssize_t numbytes = recv(cli->sockfd, msg_buffer, BUFFER_MAX_CHARS, 0);
 		if(numbytes > 0) {
-			size_t bufflen = strlen(buff_out);
+			size_t bufflen = strlen(msg_buffer);
 			if(bufflen > 0) {
-				send_message(buff_out, cli->uid);
+				send_message(msg_buffer, cli->uid);
 
-				striplf(buff_out, bufflen);
-				printf("%s\n", buff_out);
+				striplf(msg_buffer, bufflen);
+				printf("%s\n", msg_buffer);
 			}
 		}
-		else if(numbytes == 0 || strcmp(buff_out, "exit") == 0) {
-			snprintf(buff_out, BUFFER_MAX_CHARS, "%s has left\n", cli->name);
-			printf("%s", buff_out);
-			send_message(buff_out, cli->uid);
-			leave_flag = 1;
+		else if((numbytes == 0) || (strcmp(msg_buffer, "exit") == 0)) {
+			snprintf(msg_buffer, BUFFER_MAX_CHARS, "%s has left\n", cli->name);
+			printf("%s", msg_buffer);
+			send_message(msg_buffer, cli->uid);
+			shouldexit = 1;
 		}
 		else {
 			printf("ERROR: -1\n");
-			leave_flag = 1;
+			shouldexit = 1;
 		}
 
-		memset(buff_out, '\0', BUFFER_MAX_CHARS);
+		memset(msg_buffer, '\0', BUFFER_MAX_CHARS);
 	}
 
 	//if the loop exits, the thread must die, so clean up
@@ -170,7 +153,7 @@ int main(int argc, char** argv){
 	serv_addr.sin_addr.s_addr = inet_addr(ip);
 	serv_addr.sin_port = htons(port);
 	
-	//open a socket for streaming via IPv4
+	//open the socket for streaming via IPv4
 	ssize_t listenfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	//register a signal handler for ingnoring SIGPIPE
@@ -221,8 +204,8 @@ int main(int argc, char** argv){
 		//check if the server can handle another client
 		if((numclients + 1) == MAX_CLIENTS) {
 			printf("server at max capacity. connection rejected from ");
-			print_client_addr(&cli_addr);
-			putc('\n', stdout);
+			print_sockaddr(&cli_addr);
+			putchar('\n');
 			close(connfd);
 			continue;
 		}
