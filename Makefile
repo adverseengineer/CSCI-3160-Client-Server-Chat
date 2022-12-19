@@ -26,7 +26,7 @@ SERVERBIN=$(BIN)/server
 #==============================================================================
 CC=gcc
 LIBS=-pthread
-CFLAGS=-Wall -Wextra -I$(INC) $(LIBS)
+CFLAGS=-Wall -Wextra -I$(INC)
 
 
 #OBJECT NAMES
