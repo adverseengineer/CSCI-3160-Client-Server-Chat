@@ -16,6 +16,8 @@
 #include "common/common.h"
 #include "common/config.h"
 
+#include "server/blacklist.h"
+
 static _Atomic unsigned int numclients = 0;
 static int uid = 10;
 
@@ -159,6 +161,11 @@ int main(int argc, char** argv){
 	//register a signal handler for ingnoring SIGPIPE
 	signal(SIGPIPE, SIG_IGN);
 
+	//read all blacklisted ips from file
+	blacklist_init();
+
+	blacklist_print();
+
 	//change settings for the socket. extremely wonky API for this: we refer
 	//to the setting by a macro, and the value for that setting is represented
 	//by an int which we pass a pointer to. why this doesn't just take the int
@@ -199,11 +206,21 @@ int main(int argc, char** argv){
 	
 		//accept an incoming connection and populate a socket fd to talk to it
 		socklen_t clilen = sizeof(cli_addr);
-		connfd = accept(listenfd, (struct sockaddr*)&cli_addr, &clilen);
+		connfd = accept(listenfd, (struct sockaddr*) &cli_addr, &clilen);
 
 		//check if the server can handle another client
 		if((numclients + 1) == MAX_CLIENTS) {
 			printf("server at max capacity. connection rejected from ");
+			print_sockaddr(&cli_addr);
+			putchar('\n');
+			close(connfd);
+			continue;
+		}
+		
+		//TODO: test that this works
+		//reject any connections from blacklisted clients
+		if(isblacklisted(&cli_addr.sin_addr)) {
+			printf("connection rejected from blacklisted ip: ");
 			print_sockaddr(&cli_addr);
 			putchar('\n');
 			close(connfd);

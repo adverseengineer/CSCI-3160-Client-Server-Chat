@@ -44,38 +44,51 @@ _COMMONOBJ=
 COMMONOBJ=$(patsubst %,$(COMMONBUILD)/%,$(_COMMONOBJ))
 
 
-#OBJECTS
+#HEADER DEPENDENCIES
 #==============================================================================
-#client depends on client source and headers, and common headers
-$(CLIENTBUILD)/%.o: $(CLIENTSRC)/%.c $(CLIENTINC) $(COMMONINC)
-	mkdir -p $(CLIENTBUILD)
-	$(CC) -c -o $@ $< $(CFLAGS)
+_SERVERDEP=blacklist.h
+SERVERDEP=$(patsubst %,$(SERVERINC)/%,$(_SERVERDEP))
 
-#server depends on server source and headers, and common headers
-$(SERVERBUILD)/%.o: $(SERVERSRC)/%.c $(SERVERINC) $(COMMONINC)
-	mkdir -p $(SERVERBUILD)
-	$(CC) -c -o $@ $< $(CFLAGS)
+_CLIENTDEP=
+CLIENTDEP=$(patsubst %,$(CLIENTINC)/%,$(_CLIENTDEP))
 
-#common only need common source and headers
-$(COMMONBUILD)/%.o: $(COMMONSRC)/%.c $(COMMONINC)
-	mkdir -p $(COMMONBUILD)
-	$(CC) -c -o $@ $< $(CFLAGS)
+_COMMONDEP=common.h config.h
+COMMONDEP=$(patsubst %,$(COMMONINC)/%,$(_COMMONDEP))
 
 
 #EXECUTABLES
 #==============================================================================
+
 #build both client and server
 all: $(CLIENTBIN) $(SERVERBIN)
 
 #build client using client objects and common objects
 $(CLIENTBIN): $(CLIENTOBJ) $(COMMONOBJ)
-	mkdir -p $(BIN)
+	@mkdir -p $(BIN)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 #build server using server objects and common objects
 $(SERVERBIN): $(SERVEROBJ) $(COMMONOBJ)
-	mkdir -p $(BIN)
+	@mkdir -p $(BIN)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+
+#OBJECTS
+#==============================================================================
+#client depends on client source and headers, and common headers
+$(CLIENTBUILD)/%.o: $(CLIENTSRC)/%.c $(CLIENTDEP) $(COMMONDEP)
+	@mkdir -p $(CLIENTBUILD)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+#server depends on server source and headers, and common headers
+$(SERVERBUILD)/%.o: $(SERVERSRC)/%.c $(SERVERDEP) $(COMMONDEP)
+	@mkdir -p $(SERVERBUILD)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+#common only need common source and headers
+$(COMMONBUILD)/%.o: $(COMMONSRC)/%.c $(COMMONDEP)
+	@mkdir -p $(COMMONBUILD)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 
 #MISC

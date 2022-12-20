@@ -4,7 +4,7 @@
 #define CONFIG_H
 
 #define BLACKLIST_MAX_ENTRIES 10
-#define BLACKLIST_FILEPATH "blacklist.txt"
+#define BLACKLIST_FILEPATH "data/blacklist.txt"
 
 #define MAX_PENDING_CONNECTIONS 10
 #define MAX_CLIENTS 10
