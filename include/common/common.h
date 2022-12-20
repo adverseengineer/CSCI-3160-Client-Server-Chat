@@ -1,4 +1,5 @@
-
+//Nick Sells, 2022
+//CSCI 3160 Final Project
 
 #ifndef COMMON_H
 #define COMMON_H

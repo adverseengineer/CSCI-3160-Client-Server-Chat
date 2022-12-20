@@ -164,8 +164,6 @@ int main(int argc, char** argv){
 	//read all blacklisted ips from file
 	blacklist_init();
 
-	blacklist_print();
-
 	//change settings for the socket. extremely wonky API for this: we refer
 	//to the setting by a macro, and the value for that setting is represented
 	//by an int which we pass a pointer to. why this doesn't just take the int
@@ -217,7 +215,6 @@ int main(int argc, char** argv){
 			continue;
 		}
 		
-		//TODO: test that this works
 		//reject any connections from blacklisted clients
 		if(isblacklisted(&cli_addr.sin_addr)) {
 			printf("connection rejected from blacklisted ip: ");

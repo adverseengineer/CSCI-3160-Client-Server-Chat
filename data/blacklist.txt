@@ -1,6 +1,5 @@
-127.0.0.1
+thisisnotanip
 122.12.155.34
-suckmepls
 1.1.1.1
-notanipatall
+thisisalsonotanip
 12.12.14.15

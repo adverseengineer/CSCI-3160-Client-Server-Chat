@@ -1,3 +1,6 @@
+//Nick Sells, 2022
+//CSCI 3160 Final Project
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,39 +28,50 @@ void sigint_handler(int) {
 	shouldexit = 1;
 }
 
+//runs as a thread to handle outgoing messages
 void send_msg_handler(void) {
 	
-	char message[LENGTH] = {0};
-	char buffer[LENGTH + CLIENT_NAME_MAX_CHARS] = {0};
-
+	size_t bufferlen = MSG_TEXT_MAX_CHARS + CLIENT_NAME_MAX_CHARS;
+	char buffer[bufferlen];
+	char message[MSG_TEXT_MAX_CHARS];
+	
 	while(1) {
+		
+		memset(buffer, '\0', bufferlen);
+		memset(message, '\0', MSG_TEXT_MAX_CHARS);
+		
+		//read out message from stdin and copy into the message buffer
 		prompt();
-		fgets(message, LENGTH, stdin);
-		striplf(message, LENGTH);
+		fgets(message, MSG_TEXT_MAX_CHARS, stdin);
+		striplf(message, MSG_TEXT_MAX_CHARS);
 
-		if(strcmp(message, "exit") == 0) {
+		if(strcmp(message, EXITPHRASE) == 0) {
 			break;
 		}
 		else {
-			snprintf(buffer, BUFFER_MAX_CHARS, "%s: %s\n", name, message);
+			//copy our name and the message contents into the output buffer
+			snprintf(buffer, bufferlen, "%s: %s\n", name, message);
 			send(sockfd, buffer, strlen(buffer), 0);
 		}
-
-		memset(message, '\0', LENGTH);
-		memset(buffer, '\0', LENGTH + CLIENT_NAME_MAX_CHARS);
 	}
 	
 	shouldexit = 1;
 }
 
+//runs as a thread to handle incoming messages
 void recv_msg_handler(void) {
 	
-	char message[LENGTH] = {0};
+	//buffer large enough to hold message text and sender name
+	size_t bufferlen = MSG_TEXT_MAX_CHARS + CLIENT_NAME_MAX_CHARS;
+	char buffer[bufferlen];
 	
 	while(1) {
-		ssize_t numbytes = recv(sockfd, message, LENGTH, 0);
+		
+		memset(buffer, '\0', bufferlen);
+		
+		ssize_t numbytes = recv(sockfd, buffer, bufferlen, 0);
 		if(numbytes > 0) { 
-			printf("%s", message);
+			printf("%s", buffer);
 			prompt();
 		}
 		else if(numbytes == 0) {
@@ -70,7 +84,6 @@ void recv_msg_handler(void) {
 			perror("ERROR");
 			break;
 		}
-		memset(message, '\0', sizeof(message));
 	}
 }
 
@@ -114,7 +127,7 @@ int main(int argc, char** argv) {
 	}
 
 	//send the server our name
-	send(sockfd, name, CLIENT_NAME_MAX_CHARS, 0);
+	send(sockfd, name, namelen, 0);
 
 	printf("connection established, welcome to the chatroom!\n");
 

@@ -50,7 +50,7 @@ int blacklist_init(void) {
 		if(status == 1)
 			listindex++;
 		else if(status == 0)
-			fprintf(stderr, "Malformed IPv4 address at line %zu in %s\n", (i+1), BLACKLIST_FILEPATH);
+			fprintf(stderr, "WARNING: Malformed IPv4 address at line %zu in %s\n", (i+1), BLACKLIST_FILEPATH);
 	}
 	
 	free(line);
@@ -85,9 +85,8 @@ int isblacklisted(struct in_addr* addr) {
 
 //to do tomorrow:
 //review the license
-//refactor the client and server code (specifically the length macro, it should be something else, also
 //work on fixing the compiler warnings about string ops overflowing. review order of header includes and 
-//make sure it's correct, integrate blacklisting functionality into server, and add the capability for 
+//and add the capability for 
 //comments in the blacklist file, i.e. reasons for ban, something a sysadmin would use
 
 //OH, and RIGOROUSLY test blacklist_init(). there's no way there's nothing wrong with it
@@ -99,5 +98,3 @@ int isblacklisted(struct in_addr* addr) {
 
 //verify that the temp variable to store the result of every system call is the same type as the return
 //type of the system call, and not just a compatible type, i.e. ssize_t to int
-
-//and FINALLY, put my signature lines at the top of every file
