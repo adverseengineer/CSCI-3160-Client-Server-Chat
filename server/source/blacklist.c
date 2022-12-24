@@ -7,15 +7,13 @@
 
 #include <arpa/inet.h>
 
-#include "server/blacklist.h"
-#include "common/common.h"
-#include "common/config.h"
+#include "common.h"
+#include "blacklist.h"
 
 static size_t listindex = 0;
 static struct in_addr blacklist[BLACKLIST_MAX_ENTRIES];
 
 //reads the blacklist from disk and validates all ip's contained within
-//TODO: put through rigorous testing, there's no way this just works without a snag
 int blacklist_init(void) {
 
 	FILE* fp = fopen(BLACKLIST_FILEPATH, "r");
@@ -40,9 +38,11 @@ int blacklist_init(void) {
 		if(nread == -1) break;
 		
 		//we must strip \n from each line, because inet_pton() hates them
-		striplf(line, strlen(line));
+		repch(line, strlen(line), '\n', '\0');
+		//replace any # with a null terminator to hack off comments
+		repch(line, strlen(line), '#', '\0');
 		
-		//we skip blank lines
+		//we skip blank lines, this allows us to have full-line comments
 		if(line[0] == '\0')
 			continue;
 		
@@ -50,7 +50,7 @@ int blacklist_init(void) {
 		if(status == 1)
 			listindex++;
 		else if(status == 0)
-			fprintf(stderr, "WARNING: Malformed IPv4 address at line %zu in %s\n", (i+1), BLACKLIST_FILEPATH);
+			fprintf(stderr, "WARNING: Malformed IPv4 address at line %zu in %s: %s\n", (i+1), BLACKLIST_FILEPATH, line);
 	}
 	
 	free(line);

@@ -13,10 +13,8 @@
 #include <sys/types.h>
 #include <signal.h>
 
-#include "common/common.h"
-#include "common/config.h"
-
-#include "server/blacklist.h"
+#include "common.h"
+#include "blacklist.h"
 
 static _Atomic unsigned int numclients = 0;
 static int uid = 10;
@@ -110,8 +108,7 @@ void* handle_client(void* arg) {
 			size_t bufflen = strlen(msg_buffer);
 			if(bufflen > 0) {
 				send_message(msg_buffer, cli->uid);
-
-				striplf(msg_buffer, bufflen);
+				repch(msg_buffer, bufflen, '\n', '\0');
 				printf("%s\n", msg_buffer);
 			}
 		}

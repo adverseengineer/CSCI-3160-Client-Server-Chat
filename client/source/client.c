@@ -12,8 +12,8 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
-#include "common/common.h"
-#include "common/config.h"
+#include "common.h"
+#include "config.h"
 
 volatile sig_atomic_t shouldexit = 0;
 int sockfd = 0;
@@ -43,7 +43,7 @@ void send_msg_handler(void) {
 		//read out message from stdin and copy into the message buffer
 		prompt();
 		fgets(message, MSG_TEXT_MAX_CHARS, stdin);
-		striplf(message, MSG_TEXT_MAX_CHARS);
+		repch(message, MSG_TEXT_MAX_CHARS, '\n', '\0');
 
 		if(strcmp(message, EXITPHRASE) == 0) {
 			break;
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 
 	printf("Please enter your name: ");
 	fgets(name, CLIENT_NAME_MAX_CHARS, stdin);
-	striplf(name, strlen(name));
+	repch(name, strlen(name), '\n', '\0');
 
 	size_t namelen = strlen(name);
 	if((namelen > CLIENT_NAME_MAX_CHARS) || (namelen < 2)) {

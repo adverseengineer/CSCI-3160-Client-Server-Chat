@@ -1,0 +1,15 @@
+
+#this line will not be recognized as an ip
+thisisnotanip
+
+#this one will
+122.12.155.34
+
+#you can use this to include reasons for blacklisting
+1.1.1.1
+
+#you can also put a comment
+12.12.14.15#at the end of a line
+
+#unrecognized lines will be ignored after logging a warning
+thisisalsonotanip
