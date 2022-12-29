@@ -1,6 +1,9 @@
 //Nick Sells, 2022
 //CSCI 3160 Final Project
 
+#include "util.h"
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,12 +15,9 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
-#include "common.h"
-#include "config.h"
-
 volatile sig_atomic_t shouldexit = 0;
 int sockfd = 0;
-char name[CLIENT_NAME_MAX_CHARS];
+char name[CLIENTNAME_MAX_CHARS];
 
 void prompt(void) {
 	printf("> ");
@@ -31,13 +31,13 @@ void sigint_handler(int) {
 //runs as a thread to handle outgoing messages
 void send_msg_handler(void) {
 	
-	size_t bufferlen = MSG_TEXT_MAX_CHARS + CLIENT_NAME_MAX_CHARS;
-	char buffer[bufferlen];
+	size_t bufflen = MSG_TEXT_MAX_CHARS + CLIENTNAME_MAX_CHARS;
+	char buffer[bufflen];
 	char message[MSG_TEXT_MAX_CHARS];
 	
 	while(1) {
 		
-		memset(buffer, '\0', bufferlen);
+		memset(buffer, '\0', bufflen);
 		memset(message, '\0', MSG_TEXT_MAX_CHARS);
 		
 		//read out message from stdin and copy into the message buffer
@@ -45,12 +45,12 @@ void send_msg_handler(void) {
 		fgets(message, MSG_TEXT_MAX_CHARS, stdin);
 		repch(message, MSG_TEXT_MAX_CHARS, '\n', '\0');
 
-		if(strcmp(message, EXITPHRASE) == 0) {
+		if(strcmp(message, CLIENT_EXITPHRASE) == 0) {
 			break;
 		}
 		else {
 			//copy our name and the message contents into the output buffer
-			snprintf(buffer, bufferlen, "%s: %s\n", name, message);
+			snprintf(buffer, bufflen, "%s: %s\n", name, message);
 			send(sockfd, buffer, strlen(buffer), 0);
 		}
 	}
@@ -62,14 +62,14 @@ void send_msg_handler(void) {
 void recv_msg_handler(void) {
 	
 	//buffer large enough to hold message text and sender name
-	size_t bufferlen = MSG_TEXT_MAX_CHARS + CLIENT_NAME_MAX_CHARS;
-	char buffer[bufferlen];
+	size_t bufflen = MSG_TEXT_MAX_CHARS + CLIENTNAME_MAX_CHARS;
+	char buffer[bufflen];
 	
 	while(1) {
 		
-		memset(buffer, '\0', bufferlen);
+		memset(buffer, '\0', bufflen);
 		
-		ssize_t numbytes = recv(sockfd, buffer, bufferlen, 0);
+		ssize_t numbytes = recv(sockfd, buffer, bufflen, 0);
 		if(numbytes > 0) { 
 			printf("%s", buffer);
 			prompt();
@@ -101,11 +101,11 @@ int main(int argc, char** argv) {
 	signal(SIGINT, sigint_handler);
 
 	printf("Please enter your name: ");
-	fgets(name, CLIENT_NAME_MAX_CHARS, stdin);
+	fgets(name, CLIENTNAME_MAX_CHARS, stdin);
 	repch(name, strlen(name), '\n', '\0');
 
 	size_t namelen = strlen(name);
-	if((namelen > CLIENT_NAME_MAX_CHARS) || (namelen < 2)) {
+	if((namelen > CLIENTNAME_MAX_CHARS) || (namelen < 2)) {
 		printf("Name must be less than 30 and more than 2 characters.\n");
 		return EXIT_FAILURE;
 	}

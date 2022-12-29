@@ -1,6 +1,9 @@
 //Nick Sells, 2022
 //CSCI 3160 Final Project
 
+#include "util.h"
+#include "blacklist.h"
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -13,13 +16,10 @@
 #include <sys/types.h>
 #include <signal.h>
 
-#include "common.h"
-#include "blacklist.h"
-
 static _Atomic unsigned int numclients = 0;
 static int uid = 10;
 
-client_t* clients[MAX_CLIENTS];
+client_t* clients[SERVER_MAX_CLIENTS];
 
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -28,7 +28,7 @@ void queue_add(client_t* cl) {
 
 	pthread_mutex_lock(&clients_mutex);
 
-	for(size_t i = 0; i < MAX_CLIENTS; i++) {
+	for(size_t i = 0; i < SERVER_MAX_CLIENTS; i++) {
 		if(clients[i] == NULL) {
 			clients[i] = cl;
 			break;
@@ -43,7 +43,7 @@ void queue_remove(int uid) {
 
 	pthread_mutex_lock(&clients_mutex);
 
-	for(int i=0; i < MAX_CLIENTS; i++) {
+	for(int i=0; i < SERVER_MAX_CLIENTS; i++) {
 		if(clients[i]) {
 			if(clients[i]->uid == uid) {
 				clients[i] = NULL;
@@ -60,7 +60,7 @@ void send_message(char* msg, int uid) {
 
 	pthread_mutex_lock(&clients_mutex);
 
-	for(size_t i = 0; i < MAX_CLIENTS; i++) {
+	for(size_t i = 0; i < SERVER_MAX_CLIENTS; i++) {
 		if(clients[i] != NULL) {
 			if(clients[i]->uid != uid) {
 				ssize_t numbytes = write(clients[i]->sockfd, msg, strlen(msg));
@@ -78,32 +78,33 @@ void send_message(char* msg, int uid) {
 //get a name from the user then start an endless loop of sending and receiving
 void* handle_client(void* arg) {
 
-	char msg_buffer[BUFFER_MAX_CHARS];
-	char name[CLIENT_NAME_MAX_CHARS];
+	size_t bufflen = CLIENTNAME_MAX_CHARS + MSG_TEXT_MAX_CHARS; 
+	char msg_buffer[bufflen];
+	char name[CLIENTNAME_MAX_CHARS];
 	int shouldexit = 0;
 
 	numclients++;
 	client_t* cli = arg;
 
-	ssize_t numbytes = recv(cli->sockfd, name, CLIENT_NAME_MAX_CHARS, 0);
+	ssize_t numbytes = recv(cli->sockfd, name, CLIENTNAME_MAX_CHARS, 0);
 	size_t namelen = strlen(name);
 	//NOTE: the greater than 2 restriction here is cold code, greater than 2 chars is enforced client-side
-	if((numbytes <= 0) || (namelen < 2) || ((namelen + 1) >= CLIENT_NAME_MAX_CHARS)){
+	if((numbytes <= 0) || (namelen < 2) || ((namelen + 1) >= CLIENTNAME_MAX_CHARS)){
 		printf("Didn't enter the name.\n");
 		shouldexit = 1;
 	}
 	else {
-		strncpy(cli->name, name, CLIENT_NAME_MAX_CHARS);
-		snprintf(msg_buffer, BUFFER_MAX_CHARS, "%s has joined\n", cli->name);
+		strncpy(cli->name, name, CLIENTNAME_MAX_CHARS);
+		snprintf(msg_buffer, bufflen, "%s has joined\n", cli->name);
 		printf("%s", msg_buffer);
 		send_message(msg_buffer, cli->uid);
 	}
 
-	memset(msg_buffer, '\0', BUFFER_MAX_CHARS);
+	memset(msg_buffer, '\0', bufflen);
 
 	while(!shouldexit) {
 
-		ssize_t numbytes = recv(cli->sockfd, msg_buffer, BUFFER_MAX_CHARS, 0);
+		ssize_t numbytes = recv(cli->sockfd, msg_buffer, bufflen, 0);
 		if(numbytes > 0) {
 			size_t bufflen = strlen(msg_buffer);
 			if(bufflen > 0) {
@@ -113,7 +114,7 @@ void* handle_client(void* arg) {
 			}
 		}
 		else if((numbytes == 0) || (strcmp(msg_buffer, "exit") == 0)) {
-			snprintf(msg_buffer, BUFFER_MAX_CHARS, "%s has left\n", cli->name);
+			snprintf(msg_buffer, bufflen, "%s has left\n", cli->name);
 			printf("%s", msg_buffer);
 			send_message(msg_buffer, cli->uid);
 			shouldexit = 1;
@@ -123,7 +124,7 @@ void* handle_client(void* arg) {
 			shouldexit = 1;
 		}
 
-		memset(msg_buffer, '\0', BUFFER_MAX_CHARS);
+		memset(msg_buffer, '\0', bufflen);
 	}
 
 	//if the loop exits, the thread must die, so clean up
@@ -186,7 +187,7 @@ int main(int argc, char** argv){
 	}
 
 	//mark the socket as passive, one that can accept incoming connections
-	status = listen(listenfd, MAX_PENDING_CONNECTIONS);
+	status = listen(listenfd, SERVER_MAX_PENDING_CONNECTIONS);
 	if(status < 0) {
 		perror("ERROR: Socket listening failed");
 		return EXIT_FAILURE;
@@ -204,7 +205,7 @@ int main(int argc, char** argv){
 		connfd = accept(listenfd, (struct sockaddr*) &cli_addr, &clilen);
 
 		//check if the server can handle another client
-		if((numclients + 1) == MAX_CLIENTS) {
+		if((numclients + 1) == SERVER_MAX_CLIENTS) {
 			printf("server at max capacity. connection rejected from ");
 			print_sockaddr(&cli_addr);
 			putchar('\n');

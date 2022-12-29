@@ -13,3 +13,6 @@ thisisnotanip
 
 #unrecognized lines will be ignored after logging a warning
 thisisalsonotanip
+
+#localhost
+127.0.0.1

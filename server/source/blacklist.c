@@ -1,61 +1,61 @@
 //Nick Sells, 2022
 //CSCI 3160 Final Project
 
+#include "util.h"
+#include "blacklist.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <arpa/inet.h>
 
-#include "common.h"
-#include "blacklist.h"
-
 static size_t listindex = 0;
-static struct in_addr blacklist[BLACKLIST_MAX_ENTRIES];
+static struct in_addr blacklist[SERVER_BLACKLIST_MAX_ENTRIES];
 
 //reads the blacklist from disk and validates all ip's contained within
 int blacklist_init(void) {
 
-	FILE* fp = fopen(BLACKLIST_FILEPATH, "r");
+	FILE* fp = fopen(SERVER_BLACKLIST_FILEPATH, "r");
 	if(fp == NULL) {
 		//NOTE: perror() isn't printing the colon like it should. it seems if
 		//you give it any whitespace character, a null terminator, or just
 		//null, it doesn't print the colon before the error. i'll just fprintf
 		//it for now
-		fprintf(stderr, "Unable to open blacklist file \"%s\": ", BLACKLIST_FILEPATH);
+		fprintf(stderr, "Unable to open blacklist file \"%s\": ", SERVER_BLACKLIST_FILEPATH);
 		perror(NULL);
 		return EXIT_FAILURE;
 	}
-	
+
 	//NOTE: as long as line is null and len is 0, getline will malloc the line,
 	//make sure to free() it
 	char* line = NULL;
 	size_t len = 0;
-	
-	for(size_t i = 0; i < BLACKLIST_MAX_ENTRIES; i++) {
-	
+
+	for(size_t i = 0; i < SERVER_BLACKLIST_MAX_ENTRIES; i++) {
+
 		ssize_t nread = getline(&line, &len, fp);
 		if(nread == -1) break;
-		
+
 		//we must strip \n from each line, because inet_pton() hates them
 		repch(line, strlen(line), '\n', '\0');
 		//replace any # with a null terminator to hack off comments
 		repch(line, strlen(line), '#', '\0');
-		
+
 		//we skip blank lines, this allows us to have full-line comments
 		if(line[0] == '\0')
 			continue;
-		
+
 		int status = inet_pton(AF_INET, line, &blacklist[listindex]);
 		if(status == 1)
 			listindex++;
 		else if(status == 0)
-			fprintf(stderr, "WARNING: Malformed IPv4 address at line %zu in %s: %s\n", (i+1), BLACKLIST_FILEPATH, line);
+			fprintf(stderr, "WARNING: Malformed IPv4 address at line %zu in %s: %s\n", (i+1), SERVER_BLACKLIST_FILEPATH, line);
 	}
-	
+
 	free(line);
 	fclose(fp);
-	
+
 	return EXIT_SUCCESS;
 }
 
@@ -63,7 +63,7 @@ int blacklist_init(void) {
 void blacklist_print(void) {
 
 	for(size_t i = 0; i < listindex; i++) {
-	
+
 		printf("%zu: ", i);
 		print_ipv4(&blacklist[i]);
 		putchar('\n');
@@ -79,14 +79,14 @@ int isblacklisted(struct in_addr* addr) {
 		if(addr->s_addr == blacklist[i].s_addr)
 			return 1;
 	}
-	
+
 	return 0;
 }
 
 //to do tomorrow:
 //review the license
-//work on fixing the compiler warnings about string ops overflowing. review order of header includes and 
-//and add the capability for 
+//work on fixing the compiler warnings about string ops overflowing. review order of header includes and
+//and add the capability for
 //comments in the blacklist file, i.e. reasons for ban, something a sysadmin would use
 
 //OH, and RIGOROUSLY test blacklist_init(). there's no way there's nothing wrong with it

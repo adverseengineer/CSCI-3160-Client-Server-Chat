@@ -1,34 +1,31 @@
-#Makefile for common directory
+#Nick Sells, 2022
+#CSCI 3160 Final Project
 
 #Path Vars
 #==============================================================================
 SRC=source
-INC=include
-BUILD=build
+COMMONINC=include
+COMMONBUILD=build
 
 #Compilation Vars
 #==============================================================================
-CFLAGS=-I$(INC) -Wall -Wextra
-
-#Header Dependencies
-#TODO: find a way to auto-detect them and not explicitly name them here
-#==============================================================================
-_DEPS=common.h config.h
-DEPS=$(patsubst %,$(INC)/%,$(_DEPS))
+CFLAGS=-I$(COMMONINC) -Wall -Wextra
 
 #Object Files
 #==============================================================================
-_OBJ=common.o
-OBJ=$(patsubst %,$(BUILD)/%,$(_OBJ))
+COMMONDEPS=$(patsubst %,$(COMMONINC)/%,$(_COMMONDEPS))
 
-default: $(OBJ)
-
-$(BUILD)/%.o: $(SRC)/%.c $(DEPS)
+$(COMMONBUILD)/%.o: $(SRC)/%.c $(COMMONDEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
+
+#Output Binaries
+#==============================================================================
+COMMONOBJ=$(patsubst %,$(COMMONBUILD)/%,$(_COMMONOBJ))
+default: $(COMMONOBJ)
 
 #Misc Rules
 #==============================================================================
 clean:
-	rm -f $(BUILD)/*.o
+	rm -f $(COMMONBUILD)/*.o
 
 .PHONY: default clean

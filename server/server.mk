@@ -1,4 +1,5 @@
-#Makefile for server directory
+#Nick Sells, 2022
+#CSCI 3160 Final Project
 
 #Path Vars
 #==============================================================================
@@ -15,29 +16,19 @@ BIN=server
 LIBS=
 CFLAGS=-Wall -Wextra -I$(SERVERINC) -I$(COMMONINC)
 
-#Header Dependencies
-#TODO: find a way to auto-detect them and not explicitly name them here
-#==============================================================================
-_SERVERDEPS=blacklist.h
-SERVERDEPS=$(patsubst %,$(SERVERINC)/%,$(_SERVERDEPS))
-
-_COMMONDEPS=common.h config.h
-COMMONDEPS=$(patsubst %,$(COMMONINC)/%,$(_COMMONDEPS))
-
 #Object Files
-#only build the object files for server code, common objects are made elsewhere
 #==============================================================================
-_SERVEROBJ=server.o blacklist.o
-SERVEROBJ=$(patsubst %,$(SERVERBUILD)/%,$(_SERVEROBJ))
-
-_COMMONOBJ=common.o
-COMMONOBJ=$(patsubst %,$(COMMONBUILD)/%,$(_COMMONOBJ))
+COMMONDEPS=$(patsubst %,$(COMMONINC)/%,$(_COMMONDEPS))
+SERVERDEPS=$(patsubst %,$(SERVERINC)/%,$(_SERVERDEPS))
 
 $(SERVERBUILD)/%.o: $(SRC)/%.c $(SERVERDEPS) $(COMMONDEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 	
 #Output Binaries
 #==============================================================================
+SERVEROBJ=$(patsubst %,$(SERVERBUILD)/%,$(_SERVEROBJ))
+COMMONOBJ=$(patsubst %,$(COMMONBUILD)/%,$(_COMMONOBJ))
+
 $(BIN): $(SERVEROBJ) $(COMMONOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 

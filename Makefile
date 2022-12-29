@@ -1,19 +1,45 @@
 #Master Makefile for root directory
 
-#TODO: export all variables possible
-
-SERVERDIR=server
-CLIENTDIR=client
-COMMONDIR=common
+COMMONPROJ=common
+SERVERPROJ=server
+CLIENTPROJ=client
 
 export CC=gcc
 
-all:
-	$(MAKE) -C $(COMMONDIR)
-	$(MAKE) -C $(SERVERDIR)
-	$(MAKE) -C $(CLIENTDIR)
+#Headers and Objects
+#TODO: find a way to not have to call them by name, and auto-detect instead
+#==============================================================================
+export _COMMONDEPS=config.h util.h
+export _COMMONOBJ=util.o
 
-clean:
-	$(MAKE) -C $(SERVERDIR) clean
-	$(MAKE) -C $(CLIENTDIR) clean
-	$(MAKE) -C $(COMMONDIR) clean
+export _SERVERDEPS=blacklist.h
+export _SERVEROBJ=server.o blacklist.o
+
+export _CLIENTDEPS=
+export _CLIENTOBJ=client.o
+
+#Rules
+#==============================================================================
+default: common server client
+
+common:
+	$(MAKE) -C $(COMMONPROJ) -f $(COMMONPROJ).mk
+	
+server:
+	$(MAKE) -C $(SERVERPROJ) -f $(SERVERPROJ).mk
+	
+client:
+	$(MAKE) -C $(CLIENTPROJ) -f $(CLIENTPROJ).mk
+
+clean: clean-common clean-server clean-client	
+	
+clean-common:
+	$(MAKE) -C $(COMMONPROJ) -f $(COMMONPROJ).mk clean
+
+clean-server:
+	$(MAKE) -C $(SERVERPROJ) -f $(SERVERPROJ).mk clean
+	
+clean-client:
+	$(MAKE) -C $(CLIENTPROJ) -f $(CLIENTPROJ).mk clean
+	
+.PHONY: default common server client clean clean-common clean-server clean-client

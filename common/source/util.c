@@ -1,7 +1,7 @@
 //Nick Sells, 2022
 //CSCI 3160 Final Project
 
-#include "common.h"
+#include "util.h"
 #include <stdio.h>
 
 //replaces the first occcurence of oldch in str with newch, up to len chars
@@ -30,8 +30,14 @@ void print_ipv4(struct in_addr* addr) {
 }
 
 //pretty-prints a sockaddr_in struct
-void print_sockaddr(struct sockaddr_in* addr){
+void print_sockaddr(struct sockaddr_in* addr) {
 	
 	print_ipv4(&addr->sin_addr);
 	printf(":%d", addr->sin_port);
+}
+
+//sets the terminal running the program to be TERM_LINESxTERM_COLS
+void fix_termsize(void) {
+
+	printf("\e[8;%d;%dt", TERM_LINES, TERM_COLS);
 }

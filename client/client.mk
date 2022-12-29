@@ -1,4 +1,5 @@
-#Makefile for client directory
+#Nick Sells, 2022
+#CSCI 3160 Final Project
 
 #Path Vars
 #==============================================================================
@@ -15,29 +16,19 @@ BIN=client
 LIBS=-lcurses
 CFLAGS=-Wall -Wextra -I$(CLIENTINC) -I$(COMMONINC)
 
-#Header Dependencies
-#TODO: find a way to auto-detect them and not explicitly name them here
-#==============================================================================
-_CLIENTDEPS=
-CLIENTDEPS=$(patsubst %,$(CLIENTINC)/%,$(_CLIENTDEPS))
-
-_COMMONDEPS=common.h config.h
-COMMONDEPS=$(patsubst %,$(COMMONINC)/%,$(_COMMONDEPS))
-
 #Object Files
-#only build the object files for client code, common objects are made elsewhere
 #==============================================================================
-_CLIENTOBJ=client.o
-CLIENTOBJ=$(patsubst %,$(CLIENTBUILD)/%,$(_CLIENTOBJ))
-
-_COMMONOBJ=common.o
-COMMONOBJ=$(patsubst %,$(COMMONBUILD)/%,$(_COMMONOBJ))
+COMMONDEPS=$(patsubst %,$(COMMONINC)/%,$(_COMMONDEPS))
+CLIENTDEPS=$(patsubst %,$(CLIENTINC)/%,$(_CLIENTDEPS))
 
 $(CLIENTBUILD)/%.o: $(SRC)/%.c $(CLIENTDEPS) $(COMMONDEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
-	
+
 #Output Binaries
 #==============================================================================
+COMMONOBJ=$(patsubst %,$(COMMONBUILD)/%,$(_COMMONOBJ))
+CLIENTOBJ=$(patsubst %,$(CLIENTBUILD)/%,$(_CLIENTOBJ))
+
 $(BIN): $(CLIENTOBJ) $(COMMONOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
