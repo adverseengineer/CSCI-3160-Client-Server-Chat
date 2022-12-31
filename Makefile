@@ -15,8 +15,8 @@ export _COMMONOBJ=util.o
 export _SERVERDEPS=blacklist.h
 export _SERVEROBJ=server.o blacklist.o
 
-export _CLIENTDEPS=
-export _CLIENTOBJ=client.o
+export _CLIENTDEPS=ui.h
+export _CLIENTOBJ=client.o ui.o
 
 #Rules
 #==============================================================================
