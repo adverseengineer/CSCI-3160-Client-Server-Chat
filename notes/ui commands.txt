@@ -1,8 +1,0 @@
-//^K: cut (all text in unsent message buffer if ncurses doesn't make selective cutting easy)
-//^U: paste
-
-//^X: shutdown: disconnect and terminate program
-//^C: disconnect: disconnect from server
-
-//^P: toggle active peers pane
-//^Q: toggle server list
