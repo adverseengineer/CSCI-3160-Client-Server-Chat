@@ -13,7 +13,7 @@ BIN=server
 
 #Compilation Vars
 #==============================================================================
-LIBS=
+LIBS=-pthread
 CFLAGS=-Wall -Wextra -I$(SERVERINC) -I$(COMMONINC)
 
 #Object Files

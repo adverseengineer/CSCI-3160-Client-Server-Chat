@@ -87,18 +87,10 @@ void recv_msg_handler(void) {
 	}
 }
 
-int main(int argc, char** argv) {
-	
-	if(argc != 2) {
-		printf("Usage: %s <port>\n", argv[0]);
-		return EXIT_FAILURE;
-	}
+int client_establishconnection(char* portstr) {
 
 	char* ip = "127.0.0.1";
-	int port = atoi(argv[1]);
-
-	//register a signal handler to handle keyboard interrupts
-	signal(SIGINT, sigint_handler);
+	int port = atoi(portstr);
 
 	printf("Please enter your name: ");
 	fgets(name, CLIENTNAME_MAX_CHARS, stdin);
@@ -130,9 +122,28 @@ int main(int argc, char** argv) {
 	send(sockfd, name, namelen, 0);
 
 	printf("connection established, welcome to the chatroom!\n");
+	return EXIT_SUCCESS;
+}
+
+void client_closeconnection(void) {
+	
+	close(sockfd);
+}
+
+int _main(int argc, char** argv) {
+	
+	if(argc != 2) {
+		printf("Usage: %s <port>\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+
+	//register a signal handler to handle keyboard interrupts
+	signal(SIGINT, sigint_handler);
+
+	client_establishconnection(argv[1]);
 
 	pthread_t send_msg_thread;
-	status = pthread_create(&send_msg_thread, NULL, (void*) send_msg_handler, NULL);
+	int status = pthread_create(&send_msg_thread, NULL, (void*) send_msg_handler, NULL);
 	if(status != 0) {
 		printf("ERROR: pthread\n");
 		return EXIT_FAILURE;
@@ -149,7 +160,7 @@ int main(int argc, char** argv) {
 	while(!shouldexit);
 	printf("\nBye\n");
 
-	close(sockfd);
+	client_closeconnection();
 
 	return EXIT_SUCCESS;
 }

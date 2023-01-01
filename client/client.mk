@@ -13,7 +13,7 @@ BIN=client
 
 #Compilation Vars
 #==============================================================================
-LIBS=-lcurses
+LIBS=-lcurses -pthread
 CFLAGS=-Wall -Wextra -I$(CLIENTINC) -I$(COMMONINC)
 
 #Object Files
