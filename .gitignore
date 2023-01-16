@@ -1,4 +1,5 @@
 notes/
 testing/*
+.vscode/
 serverex
 clientex
