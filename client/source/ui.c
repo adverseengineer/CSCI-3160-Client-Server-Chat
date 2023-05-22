@@ -175,7 +175,7 @@ void ui_status_update(char* str) {
 }
 
 //renamed to avoid conflict with the real main
-int main(int argc, char** argv) {
+int __main(int argc, char** argv) {
 
 	ui_init();
 

@@ -130,7 +130,7 @@ void client_closeconnection(void) {
 	close(sockfd);
 }
 
-int _main(int argc, char** argv) {
+int main(int argc, char** argv) {
 	
 	if(argc != 2) {
 		printf("Usage: %s <port>\n", argv[0]);

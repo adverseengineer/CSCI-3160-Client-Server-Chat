@@ -1,5 +1,4 @@
 notes/
 testing/*
 .vscode/
-serverex
-clientex
+*.code-workspace
